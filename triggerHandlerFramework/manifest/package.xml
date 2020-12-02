@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>BatchHandler</members>
+        <members>CalloutEngine</members>
+        <members>MetadataHandler</members>
+        <members>TriggerHandler</members>
+        <members>sObjectManager</members>
+        <members>WebserviceEngine</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>BatchHandlerSetting__mdt</members>
+        <members>CalloutEngineSetting__mdt</members>
+        <members>TriggerHandlerSetting__mdt</members>
+        <members>CalloutLog__c</members>
+        <members>WebserviceUnit__mdt</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>BatchHandlerSetting__mdt-Batch Schedule Layout</members>
+        <members>CalloutEngineSetting__mdt-Callout Handler Setting Layout</members>
+        <members>TriggerHandlerSetting__mdt-Trigger Handler Setting Layout</members>
+        <members>WebserviceUnit__mdt-Webservice Unit Layout</members>
+        <members>CalloutLog__c-Callout Log Layout</members>
+        <name>Layout</name>
+    </types>
+    <version>47.0</version>
+</Package>

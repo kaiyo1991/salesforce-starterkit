@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AdvancedTriggerControl__c</fullName>
+    <defaultValue>false</defaultValue>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <inlineHelpText>Enables advanced control of the trigger flow.</inlineHelpText>
+    <label>Advanced Trigger Control</label>
+    <type>Checkbox</type>
+</CustomField>
