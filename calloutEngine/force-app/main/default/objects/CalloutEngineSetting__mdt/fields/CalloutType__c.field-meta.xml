@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CalloutType__c</fullName>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>CalloutType</label>
+    <required>false</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Standard APEX</fullName>
+                <default>true</default>
+                <label>Standard APEX</label>
+            </value>
+            <value>
+                <fullName>Named Credential</fullName>
+                <default>false</default>
+                <label>Named Credential</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

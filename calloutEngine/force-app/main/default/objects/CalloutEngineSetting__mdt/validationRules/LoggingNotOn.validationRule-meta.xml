@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>LoggingNotOn</fullName>
+    <active>true</active>
+    <errorConditionFormula>RetryOnFail__c &amp;&amp; !RecordLogging__c</errorConditionFormula>
+    <errorDisplayField>RecordLogging__c</errorDisplayField>
+    <errorMessage>Record logging needs to be turned on to enable Retry on Failures</errorMessage>
+</ValidationRule>

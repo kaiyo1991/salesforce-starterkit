@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AuthenticationType__c</fullName>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Auth Type</label>
+    <required>false</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Simple</fullName>
+                <default>false</default>
+                <label>Simple</label>
+            </value>
+            <value>
+                <fullName>API Key</fullName>
+                <default>false</default>
+                <label>API Key</label>
+            </value>
+            <value>
+                <fullName>Basic</fullName>
+                <default>true</default>
+                <label>Basic</label>
+            </value>
+            <value>
+                <fullName>Bearer</fullName>
+                <default>false</default>
+                <label>Bearer</label>
+            </value>
+            <value>
+                <fullName>OAuth</fullName>
+                <default>false</default>
+                <label>OAuth</label>
+            </value>
+            <value>
+                <fullName>None</fullName>
+                <default>false</default>
+                <label>None</label>
+            </value>
+            <value>
+                <fullName>Override</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Override</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
