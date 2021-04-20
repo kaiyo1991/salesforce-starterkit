@@ -10,12 +10,18 @@ public class CalloutEngine {
     private String calloutBody;
     private String calloutMethod;
     private Boolean oAuthPrepared = false;
+    public Boolean isOAuth = false;
     private Map<String,String> calloutEndpointParams = new Map<String,String>();
     private Map<String,String> calloutHeaders = new Map<String,String>();
 	private CalloutLog__c retrySource;
     private CalloutEngineSetting__mdt setting;
     private HttpRequest callRequest;
     private HttpResponse callResponse;
+    private String oAuthResponse;
+    private String oAuthAccessKey;
+    
+    private CalloutEngineMock testOAuthMock;
+    private CalloutEngineMock testMock;
     
     //Static methods
     public static HttpResponse call(String endpoint, String method, Map<String, String> headers, String body) {
@@ -24,14 +30,17 @@ public class CalloutEngine {
 
         if(headers != null) {
             for(String key : headers.keySet()) {
+                System.debug(key + ' : ' + headers.get(key));
                 request.setHeader(key, headers.get(key));
             }
         }
         request.setEndpoint(endPoint);
         request.setMethod(method); 
         if(body != null) request.setBody(body);
-        
+        System.debug(body);
+        System.debug(endPoint);
         HttpResponse response = h.send(request);
+        System.debug(response.getBody());
         return response;
     }
     
@@ -66,7 +75,8 @@ public class CalloutEngine {
     private void parseSetting() {
         this.calloutEndpoint = this.setting.Endpoint__c;
         this.calloutMethod = this.setting.Method__c != null ? this.setting.Method__c : 'GET';
- 
+ 		if(this.setting.DefaultBody__c != null) this.calloutBody = this.setting.DefaultBody__c;
+            
         if(this.setting.DefaultParameters__c != null) {
             Map<String, Object> paramsParsed = (Map<String, Object>) JSON.deserializeUntyped(this.setting.DefaultParameters__c);
             for(String s : paramsParsed.keySet()) {
@@ -145,11 +155,26 @@ public class CalloutEngine {
         this.calloutHeaders.put('Authorization', 'Bearer ' + this.setting.BearerToken__c);
     }
     private void handleOAuth() {
-        if(!this.oAuthPrepared) throw new CalloutEngineException('For OAuth callouts, please call the [HttpResponse prepareOAuth()] method first');
+        if(this.setting.AccessTokenInBaseResponse__c) {
+            String accessKeyId = this.setting.AccessTokenId__c != null ? this.setting.AccessTokenId__c : 'access_token';
+            String resp = this.prepareOAuth();
+            Map<String,Object> respJson = (Map<String,Object>)JSON.deserializeUntyped(resp);
+            this.oAuthAccessKey = String.valueOf(respJson.get(accessKeyId));
+            System.debug(accessKeyId);
+            System.debug(respJson);
+            System.debug(oAuthAccessKey);
+            switch on this.setting.OAuthAuthorizationType__c {
+                when 'Simple' { this.calloutHeaders.put('Authorization', oAuthAccessKey); }
+                when 'Basic' { this.calloutHeaders.put('Authorization', 'Basic ' + oAuthAccessKey); }
+                when 'Bearer' { this.calloutHeaders.put('Authorization', 'Bearer ' + oAuthAccessKey); }
+            }
+        } else {
+            if(!this.oAuthPrepared) throw new CalloutEngineException('For OAuth callouts, please call the [HttpResponse prepareOAuth()] method first if the Access token is not in the base response');
+        }
     }
-    private CalloutLog__c createLog(Boolean isSuccess, Boolean retry, Integer retrycount) {
+    private CalloutLog__c createLog(String status, Boolean retry, Integer retrycount) {
         return new CalloutLog__c(
-        	Status__c = isSuccess ? 'Success' : 'Failed',
+        	Status__c = status,
             Endpoint__c = this.calloutEndpoint,
             RequestBody__c = this.calloutBody,
             RequestHeadersJson__c = JSON.serialize(this.calloutHeaders),
@@ -158,9 +183,9 @@ public class CalloutEngine {
             RetrySource__c = this.retrySource == null? null : this.retrySource.Id,
             CalloutSource__c = this.calloutKey,
             ResponseHandler__c = this.setting.RetryResponseHandler__c,
-            ResponseCode__c = String.valueOf(this.callResponse.getStatusCode()),
+            ResponseCode__c = this.callResponse.getStatusCode() + '',
             ResponseBody__c = this.callResponse.getBody(),
-            Retry__c = retry
+            Retry__c = status != 'Unhandled' ? retry : false
         );
     }
     
@@ -180,31 +205,41 @@ public class CalloutEngine {
     public void setHeader(String key, String value) {
         this.calloutHeaders.put(key, value);
     }
-    public void overrideHeader(Map<String, String> headers) {
-        for(String s : headers.keySet()) this.calloutHeaders.put(s, headers.get(s));
-    }
-    public HttpResponse prepareOAuth() {
+    public String prepareOAuth() {
         this.oAuthPrepared = true;
-        return call(this.setting.OAuthEndpoint__c,
-            this.setting.OAuthMethod__c,
-            new Map<String,String>(),null);
+        CalloutEngine oauthPrep = new CalloutEngine(this.setting.OAuth_Id__c);
+        oauthPrep.isOAuth = true;
+        oauthPrep.setMock(this.testOAuthMock);
+        this.oauthResponse = String.valueOf(oauthPrep.call());
+        return this.oauthResponse;
     }
     public Object call(String body) {
         this.setBody(body);
         return this.call();
     }
     public Object call() {
+        if(Test.isRunningTest()) {
+            Test.setMock(HttpCalloutMock.class, this.testMock);
+        }
+        
         Http h = new Http();
         HttpRequest hr = new HttpRequest();
         
         this.addAuth(hr);
         if(this.retrySource == null) this.rebuildEndpoint();
         
+        System.debug('CALLOUT ENGINE: ENDPOINT: ' + this.calloutEndpoint);
         hr.setEndpoint(this.calloutEndpoint);
+        System.debug('CALLOUT ENGINE: METHOD: ' + this.calloutEndpoint);
         hr.setMethod(this.calloutMethod);
         
         if(this.calloutBody != null) hr.setBody(this.calloutBody);
-        for(String s : this.calloutHeaders.keySet()) hr.setHeader(s, this.calloutHeaders.get(s));
+        for(String s : this.calloutHeaders.keySet()) {
+            if(this.calloutHeaders.get(s) != null) {
+                hr.setHeader(s, this.calloutHeaders.get(s));
+                System.debug('CALLOUT ENGINE: HEADER: ' + '[' + s + ']' + this.calloutHeaders.get(s));
+            }
+        }
         
         HttpResponse response = h.send(hr);
         this.callRequest = hr;
@@ -222,7 +257,7 @@ public class CalloutEngine {
             if(this.setting.RetryCount__c == null) this.setting.RetryCount__c = 1; 
             Integer retryCount = this.retrySource == null ? 0 : (Integer.valueOf(this.retrySource.RetryCount__c) + 1);
             Boolean retry = this.setting.RetryOnFail__c && this.setting.RetryCount__c >= retryCount;
-            CalloutLog__c cl = this.createLog(false, retry, retryCount);
+            CalloutLog__c cl = this.createLog('Failed', retry, retryCount);
             
             if(queueLogCreate) {
                 System.enqueueJob(new CalloutLogCreate(cl));
@@ -235,7 +270,21 @@ public class CalloutEngine {
     }
     public void logSuccess() {
         Integer retryCount = this.retrySource == null ? 0 : (Integer.valueOf(this.retrySource.RetryCount__c) + 1);
-        insert this.createLog(true,false,null);
+        insert this.createLog('Success',false,null);
+    }
+    
+    
+    public void setMockOAuth(String s) {
+        this.testOAuthMock = new CalloutEngineMock(s,200);
+    }
+    public void setMock(String s) {
+        this.testMock = new CalloutEngineMock(s,200);
+    }
+    public void setMock(Integer statusCode, String s) {
+        this.testMock = new CalloutEngineMock(s,statusCode);
+    }
+    public void setMock(CalloutEngineMock cem) {
+        this.testMock = cem;
     }
 
     //Inner Classes and Interfaces
@@ -256,16 +305,37 @@ public class CalloutEngine {
             this.log = log;
         }
         public void execute(QueueableContext context) {
-            Type t = Type.forName(this.log.ResponseHandler__c);
-            CalloutResponseHandler crh = (CalloutResponseHandler) t.newInstance();
             CalloutEngine ch = new CalloutEngine(this.log);
-            ch.call();
-            crh.handleResponse(ch);
+            if(!Test.isRunningTest()) {
+                ch.call();
+                if(this.log.ResponseHandler__c == null) {
+                    ch.createLog('Unhandled',false,null);
+                } else {
+                    Type t = Type.forName(this.log.ResponseHandler__c);
+                    CalloutResponseHandler crh = (CalloutResponseHandler) t.newInstance();
+                    crh.handleResponse(ch);
+                }
+            }
         }
     }
     private class CalloutEngineException extends Exception {}
     public interface CalloutResponseHandler {
         Map<String,Object> handleResponse(CalloutEngine ch);
+    }
+    public class CalloutEngineMock implements HttpCalloutMock {
+        public String body;
+        public Integer statusCode;
+        public CalloutEngineMock(String s,Integer statusCode) {
+			this.body = s;
+            this.statusCode = statusCode != null ? statusCode : 200;
+        }
+        public HTTPResponse respond(HTTPRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setHeader('Content-Type', 'application/json');
+            res.setBody(this.body);
+            res.setStatusCode(this.statusCode);
+            return res;
+        }
     }
     
     //Messaging attributes

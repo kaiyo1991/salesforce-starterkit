@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Status__c</fullName>
+    <fullName>OAuthAuthorizationType__c</fullName>
     <externalId>false</externalId>
-    <label>Status</label>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>OAuth: Authorization Type</label>
     <required>false</required>
-    <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
         <restricted>true</restricted>
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Success</fullName>
-                <default>false</default>
-                <label>Success</label>
+                <fullName>Simple</fullName>
+                <default>true</default>
+                <label>Simple</label>
             </value>
             <value>
-                <fullName>Failed</fullName>
+                <fullName>Basic</fullName>
                 <default>false</default>
-                <label>Failed</label>
+                <label>Basic</label>
             </value>
             <value>
-                <fullName>Unhandled</fullName>
+                <fullName>Bearer</fullName>
                 <default>false</default>
-                <label>Unhandled</label>
+                <label>Bearer</label>
             </value>
         </valueSetDefinition>
     </valueSet>

@@ -19,6 +19,7 @@ global class WebserviceEngine {
             if(WebserviceEngine.setting != null && WebserviceEngine.setting.Implementation__c != null) {
                 Type t = Type.forName(WebserviceEngine.setting.Implementation__c);
                 WebserviceEngine.wsu = (WebserviceUnit) t.newInstance();
+                WebserviceEngine.wsu.initialize(req,params);
             }
         }
     }
@@ -45,10 +46,10 @@ global class WebserviceEngine {
                 when 'DELETE' { wsu.doDelete(); }
                 when 'PATCH' { wsu.doPatch(); }
                 when 'PUT' { wsu.doPut(); }
-                when 'HEAD' { wsu.doHead(); }
                 when else { /* do nothing */ }
             }
             wsu.getContentType(resp);
+            resp.statusCode = wsu.getCode();
             resp.responseBody = wsu.getBody();
         } else {
             setNotFound();
@@ -70,15 +71,38 @@ global class WebserviceEngine {
 	@HttpPatch
     global static void doPatch() { run(); }
     
-    
     global virtual class WebserviceUnit {
+        private Integer code = 200;
         private String body;
         private String contentType;
+        private RestRequest req;
+        private Map<String,String> params;
+        
+        global void initialize(RestRequest req,Map<String,String> params) {
+            this.req = req;
+            this.params = params;
+        }
+        global String getRequestBody() {
+            if(this.req.requestBody != null) {
+                return this.req.requestBody.toString();
+            }
+            return null;
+        }
+        global Map<String,String> getRequestParams() {
+            return this.params;
+        }
+        global void setError(Integer code, String message) {
+            this.code = code;
+            this.body = String.valueOf(message);
+        }
         global void setBody(Object body) {
             this.body = String.valueOf(body);
         }
+        global Integer getCode() {
+            return this.code;
+        }
         global Blob getBody() {
-            return Blob.valueOf(this.body);
+            return this.body != null ? Blob.valueOf(this.body) : null;
         }
         global void getContentType(RestResponse resp) {
             resp.addHeader('Content-Type', this.contentType);
@@ -91,6 +115,5 @@ global class WebserviceEngine {
         global virtual void doDelete() {}
         global virtual void doPut() {}
         global virtual void doPatch() {}
-        global virtual void doHead() {}
     }
 }

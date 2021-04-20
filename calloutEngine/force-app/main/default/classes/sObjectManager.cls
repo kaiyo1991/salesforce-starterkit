@@ -9,6 +9,8 @@ public class sObjectManager {
         if(globalDescribe == null) globalDescribe = Schema.getGlobalDescribe();
         return globalDescribe;
     }
+    
+    
     public static sObject initialize(String objName) {
         if(gd().containsKey(objName)) {
             return gd().get(objName).newSObject();

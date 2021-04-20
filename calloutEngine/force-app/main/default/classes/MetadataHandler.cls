@@ -26,7 +26,7 @@ public class MetadataHandler implements Metadata.DeployCallback {
         }
         return metadataSettings.get(metadataName);
     }
-
+	
     public void handleResult(Metadata.DeployResult result, Metadata.DeployCallbackContext context) {
         Id jobId = context.getCallbackJobId();
 
@@ -41,31 +41,7 @@ public class MetadataHandler implements Metadata.DeployCallback {
             throw new MetadataHandlerException(DEPLOY_FAILED + 'Error code: ' + result.errorStatusCode + ' Message: ' + result.errorMessage);
         }
     }
-
-    public static String getDeployStatus(Id jobId) {
-        String endPoint = URL.getOrgDomainUrl().toExternalForm() 
-            + '/services/data/v50.0/tooling/query/?q=SELECT+Id,Status,StartDate,CompletedDate+FROM+DeployRequest+WHERE+Id=\''
-            + jobId + '\'';
-        
-        Map<String, String> calloutHeaders = new Map<String,String> {
-            'Authorization' => 'Bearer ' + UserInfo.getSessionID(),
-            'Content-Type' => 'application/json'
-        };
-        HttpResponse hr = CalloutEngine.call(endPoint, 'GET', calloutHeaders,null);
-
-        Map<String,Object> resp = (Map<String,Object>) JSON.deserializeUntyped(hr.getBody());
-        if(resp.containsKey('done') && resp.get('done') == true) {
-            if(resp.containsKey('records')) {
-                List<Object> records = (List<Object>) resp.get('records');
-                for(Object o : records) {
-                    Map<String,Object> respRecord = (Map<String,Object>) o;
-                    if(String.valueOf(respRecord.get('Id')) == jobId) return String.valueOf(respRecord.get('Status'));
-                }
-            }
-        } else return 'pending';
-        return 'unknown';
-    }
-
+    
     public static String createUpdateMetadata(String typeName,String fullName, Map<String, Object> fieldsToUpdate) {
         Metadata.CustomMetadata customMetadata =  new Metadata.CustomMetadata();
         if(typeName.indexOf('__mdt') > -1) typeName = typeName.split('__mdt')[0];
@@ -81,7 +57,15 @@ public class MetadataHandler implements Metadata.DeployCallback {
         Metadata.DeployContainer mdContainer = new Metadata.DeployContainer();
         mdContainer.addMetadata(customMetadata);
         MetadataHandler callback = new MetadataHandler();
-        return Metadata.Operations.enqueueDeployment(mdContainer, callback);
+        if(Test.isRunningTest()) {
+            Metadata.DeployResult result = new Metadata.DeployResult();
+            result.status = Metadata.DeployStatus.Succeeded;
+            Metadata.DeployCallbackContext context = new Metadata.DeployCallbackContext();
+            callback.handleResult(result, context);
+            return null;
+        } else {
+        	return Metadata.Operations.enqueueDeployment(mdContainer, callback);
+        }
     }
     private static void addFieldValue(Metadata.CustomMetadata customMetadata, String fieldName, Object fieldValue) {
         Metadata.CustomMetadataValue customField = new Metadata.CustomMetadataValue();
@@ -89,4 +73,5 @@ public class MetadataHandler implements Metadata.DeployCallback {
         customField.value = fieldValue;
         customMetadata.values.add(customField);
     }
+	
 }
