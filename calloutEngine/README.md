@@ -66,7 +66,9 @@ HttpResponse resp = test.getResponse();
 ### Authentication types
 #### Simple
 Simple authentications is basically adding the `Authorization` header to the callout. The field value from `Simple: Token` will be used. 
-|Authorization|<value from Simple: Token field>|
+|Header Key |Header Value  |
+--- | ---
+|Authorization|(value from Simple: Token field)|
 
 #### Basic
 
