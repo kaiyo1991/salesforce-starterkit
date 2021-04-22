@@ -4,11 +4,37 @@
 
 The Callout engine stores outbound callout data in a custom metadata and uses a core Apex class to execute the setup of the needed variables and does the callout for you. Instead of coding the callout setup, the developer will now only need to setup the record on the `CalloutEngineSetting__mdt` custom metadata and setup the body and any dynamic details on the callout.
 
-## Usage Insturctions
+## Usage Instructions
+### Setting up the Metadata
 1. Open the `Callout Engine Setting` metadata and create a new record
 2. Provide a label and a unique name - you will be using the Unique name later on
 3. Provide the endpoint and the method. You may use brackets (<>) to annotate variable values in your endpoint. A URL with dynamic variables will look like this `https://www.test.com/<param1>/<param2>` and can be populated on your code.
 4. Provide your Auth type and populate the fields on the section pertaining to your selected Auth type. Each Auth type section will be discussed further below.
+5. Save and use the Metadata developername on your code to use a specific record.
+
+###Coding the Callout
+1. Create an instance of the class `CalloutEngine`, pass the Metadata developername as the constructor parameter.
+```java
+CalloutEngine test = new CalloutEngine('sample_metadata_developername');
+```
+2. If you have any endpoint parameter e.g. (Endpoint provided is `https://www.test.com/<param1>/<param2>/`), you may use the method `setEndpointParam` to populate this value.
+```java
+CalloutEngine test = new CalloutEngine('sample_metadata_developername');
+//Sample endpoint is https://www.test.com/<param1>/<param2>
+//Code below will populate the param1
+test.setEndpointParam('param1','sampleurlparameter');
+//Another to populate param2
+test.setEndpointParam('param2','moreurlparameters');
+//which will make our final endpoint https://www.test.com/sampleurlparameter/moreurlparameters
+
+//Adding a non existing merge text will add it as a parameter url
+test.setEndpointParam('newUrlparam','newurlparameter');
+//this would make final endpoint as https://www.test.com/sampleurlparameter/moreurlparameters?newUrlparam=newurlparameter
+
+```
+
+
+
 
 
 
