@@ -86,6 +86,9 @@ Bearer Authentication is similar to Simple, but the token is typically generated
 For OAuth, you will be creating 2 Metadata records, one for the Token generation, and another for the actual callout. For the token generation metadata record, it usually uses a Bearer authentication type, so create it like how you would normally create a Bearer record. For the actual callout metadata record, you will need to set the Auth type to OAuth, and populate the `OAuth: Id` with the Developer name of your token generation metadata record. If the return type is JSON, and contains the access_token (or any other value containing the generated token), you may check the `Access Token in base response?` field and it will automatically attach the token to your actual callout. Otherwise, you will need to call the `prepareOAuth()` method which returns the string body of response from the token generation callout, and use the `setHeader` or `setUrlParam` methods to attach your oauth token.
 
 
+### Callout Logs and retry
+
+#### Callout Logs
 
 
 
