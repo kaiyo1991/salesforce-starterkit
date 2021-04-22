@@ -71,8 +71,16 @@ Simple authentications is basically adding the `Authorization` header to the cal
 |Authorization|(value from Simple: Token field)|
 
 #### Basic
+Basic authentications is using a Username and Password to generate a key. The field value from `Basic: Token` can be populated if you already have the key, otherwise, the `Basic:Username` and `Basic:Password` will be used to generate the `Authorization` Header 
+|Header Key |Header Value  |
+--- | ---
+|Authorization|Basic (value from Basic: Token field or generated from Username and Password)|
 
 #### Bearer
+Bearer Authentication is similar to Simple, but the token is typically generated as part of an OAuth flow.
+|Header Key |Header Value  |
+--- | ---
+|Authorization|Bearer (value from Basic: Token field or generated from Username and Password)|
 
 #### OAuth
 
