@@ -12,7 +12,7 @@ The Callout engine stores outbound callout data in a custom metadata and uses a 
 4. Provide your Auth type and populate the fields on the section pertaining to your selected Auth type. Each Auth type section will be discussed further below.
 5. Save and use the Metadata developername on your code to use a specific record.
 
-###Coding the Callout
+### Coding the Callout
 1. Create an instance of the class `CalloutEngine`, pass the Metadata developername as the constructor parameter.
 ```java
 CalloutEngine test = new CalloutEngine('sample_metadata_developername');
@@ -30,9 +30,31 @@ test.setEndpointParam('param2','moreurlparameters');
 //Adding a non existing merge text will add it as a parameter url
 test.setEndpointParam('newUrlparam','newurlparameter');
 //this would make final endpoint as https://www.test.com/sampleurlparameter/moreurlparameters?newUrlparam=newurlparameter
-
 ```
+3. Alternatively, you may use the `setEndpointParams` method and pass a `Map<String,String>` to populate all parameters in one go.
+4. Callout headers may be added using the `setHeader(String key, String value)` or the `setHeaders(Map<String,String> headerValues)` methods.
+5. Callout body may be set using the `setBody(String calloutBody)` method.
+6. Use the `call()` method to run the callout, or use the `call(String body)` to set the callout body, and run the callout in one method.
+7. After running the call method, it will be returning an `Object` type variable which is the callout response's body.
+8. You may access the full `HttpResponse` of the callout by using the `getResponse()` method.
+9. Below is a sample code running a full callout with URL parameters and Callout headers
+```java
+//setup the callout payload
+Account a = new Account(
+  Name = 'SampleAccount',
+  AnnualRevenue = 100000
+);
 
+//Create the engine instance
+CalloutEngine test = new CalloutEngine('sample_callout');
+//Set the header
+test.setHeader('Content-Type','application/json');
+//Set the body and serialize it as JSON
+test.setBody(JSON.serialize(a));
+//Run the callout
+test.call();
+HttpResponse resp = test.getResponse();
+```
 
 
 
