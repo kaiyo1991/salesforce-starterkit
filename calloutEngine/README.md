@@ -101,7 +101,7 @@ test.logSuccess()
 test.markFailed();
 ```
 
-### Failed Callout Retries
+#### Failed Callout Retries
 When the `markFailed()` method is called, a new `Callout Log` record will be created with the Status set to false. If the `Retry on Fail` Field on the custom metadata is checked, the framework will attempt to retry the callout with the same values. A `Retry Response Handler` needs to be added if you want to handle the retry response. Otherwise, a `Callout Log` with a status of Unhandled will be created.
 
 To handle the retry response, you need to create a new Apex Class that implements the interface `CalloutEngine.CalloutResponseHandler`. You will then use that name and add it to the `Retry Response Handler`. The framework will provide you the CalloutEngine instance and you can use this to run any logic within your class.
