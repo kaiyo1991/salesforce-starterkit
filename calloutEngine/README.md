@@ -89,7 +89,41 @@ For OAuth, you will be creating 2 Metadata records, one for the Token generation
 ### Callout Logs and retry
 
 #### Callout Logs
+You can enable callout logs by checking the `Record Logging` checkbox. This will allow you to call the `logSuccess()` and `markFailed()` methods on your code to create a log on the `Callout Log` object with the appropriate status.
+```java
+CalloutEngine test = new CalloutEngine('sample');
+test.call();
 
+//The code below will create a Callout Log record with a Success status
+test.logSuccess()
+
+//The code below will create a Callout Log record with a Failed status, If the Retry on fail checkbox is checked, the framework will attempt to retry the callout with the same Callout values as the failed callout.
+test.markFailed();
+```
+
+### Failed Callout Retries
+When the `markFailed()` method is called, a new `Callout Log` record will be created with the Status set to false. If the `Retry on Fail` Field on the custom metadata is checked, the framework will attempt to retry the callout with the same values. A `Retry Response Handler` needs to be added if you want to handle the retry response. Otherwise, a `Callout Log` with a status of Unhandled will be created.
+
+To handle the retry response, you need to create a new Apex Class that implements the interface `CalloutEngine.CalloutResponseHandler`. You will then use that name and add it to the `Retry Response Handler`. The framework will provide you the CalloutEngine instance and you can use this to run any logic within your class.
+
+Sample response handler code below:
+```java
+public class HandleWsSampleResponse implements CalloutEngine.CalloutResponseHandler {
+    public Map<String,Object> handleResponse(CalloutEngine ch) {
+        if(ch.getResponse().getStatusCode() == 404) {
+            //marking the response as failed will make the framework try to run the Retry again, only if the retry counter is less than the value on the Retry Count on the metadata
+            ch.markFailed();
+        } else if(ch.getResponse().getStatusCode() == 200) {
+            String strBody = ch.getResponse().getBody();
+            System.debug(strBody());
+            
+            
+            //Calling the logSuccess is optional, and should only be done if you want a log of the success callout
+            ch.logSuccess();
+        }
+    }
+}
+```
 
 
 
