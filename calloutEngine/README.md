@@ -5,7 +5,7 @@
 The Callout engine stores outbound callout data in a custom metadata and uses a core Apex class to execute the setup of the needed variables and does the callout for you. Instead of coding the callout setup, the developer will now only need to setup the record on the `CalloutEngineSetting__mdt` custom metadata and setup the body and any dynamic details on the callout.
 
 ## Usage Instructions
-### Setting up the Metadata
+### I. Setting up the Metadata
 1. Open the `Callout Engine Setting` metadata and create a new record
 2. Provide a label and a unique name - you will be using the Unique name later on
 3. The callout type will be defaulted to `Standard Apex`. Named credentials are currently not supported but will be supported in the future.
@@ -19,7 +19,7 @@ The Callout engine stores outbound callout data in a custom metadata and uses a 
  ```
 6. Save and use the Metadata developername on your code to use a specific record.
 
-### Coding the Callout
+### II. Coding the Callout
 1. Create an instance of the class `CalloutEngine`, pass the Metadata developername as the constructor parameter.
 ```java
 CalloutEngine test = new CalloutEngine('sample_metadata_developername');
@@ -63,7 +63,7 @@ test.call();
 HttpResponse resp = test.getResponse();
 ```
 
-### Authentication types
+### III. Authentication types
 #### Simple
 Simple authentications is basically adding the `Authorization` header to the callout. The field value from `Simple: Token` will be used. 
 |Header Key |Header Value  |
@@ -86,7 +86,7 @@ Bearer Authentication is similar to Simple, but the token is typically generated
 For OAuth, you will be creating 2 Metadata records, one for the Token generation, and another for the actual callout. For the token generation metadata record, it usually uses a Bearer authentication type, so create it like how you would normally create a Bearer record. For the actual callout metadata record, you will need to set the Auth type to OAuth, and populate the `OAuth: Id` with the Developer name of your token generation metadata record. If the return type is JSON, and contains the access_token (or any other value containing the generated token), you may check the `Access Token in base response?` field and it will automatically attach the token to your actual callout. Otherwise, you will need to call the `prepareOAuth()` method which returns the string body of response from the token generation callout, and use the `setHeader` or `setUrlParam` methods to attach your oauth token.
 
 
-### Callout Logs and retry
+### IV. Callout Logs and retry
 
 #### Callout Logs
 You can enable callout logs by checking the `Record Logging` checkbox. This will allow you to call the `logSuccess()` and `markFailed()` methods on your code to create a log on the `Callout Log` object with the appropriate status.
@@ -125,6 +125,28 @@ public class HandleWsSampleResponse implements CalloutEngine.CalloutResponseHand
 }
 ```
 
+### V. Testing your Code
+To test your code, you only need to provide the Mock callout values. You can do this by calling `setMock` method (Overloads: `setMock(String s)`, `setMock(Integer statusCode, String s)`, `setMock(CalloutEngineMock cem)`). 
 
+```java
+CalloutEngine test = new CalloutEngine('sample');
+test.setMock(200, '{"test":"test"}');
+test.call();
+```
+
+This will automatically handle the testing of your code when the transaction is running as a Test context.
+
+For OAuths, you will need to provide the mock for the OAuth's initial token call. You can do this by calling the `setMockOAuth(String s)` method within your code.
+```java
+
+CalloutEngine test = new CalloutEngine('sample');
+
+//this will be used as the mock response for the initial callout to retrieve the token
+test.setMockAuth('{"access_token":"sample123"}');
+
+//this will be used as the mock response for the actual callout
+test.setMock(200, '{"test":"test"}');
+test.call();
+```
 
 
